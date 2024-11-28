@@ -68,7 +68,7 @@ set_aslr_offset <offsetH>   - set aslr offset for code section
 disas [<addr>] [aslr]       - disassemble at address. Optional "aslr" parameter to account for code randomization. Default is to disassemble at current PC.
 interactive | int           - get a normal shell
 stack [dwordsH]             - display the stack
-debug <on|off>              - toogle debug output
+debug <on|off|q>            - toogle debug output
 
 You can also manually send any GDB RSP command.
     """
@@ -751,6 +751,8 @@ def main_loop(log_level) -> NoReturn:
                     case "on":
                         logging.getLogger().setLevel(logging.DEBUG)
                     case "off":
+                        logging.getLogger().setLevel(logging.INFO)
+                    case "q":
                         logging.getLogger().setLevel(logging.ERROR)
                     case _:
                         logger.error(f"Bad debug switch: {switch}")
