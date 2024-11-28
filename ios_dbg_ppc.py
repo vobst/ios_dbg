@@ -70,7 +70,7 @@ lib.cs_mode = cs.CS_MODE_BIG_ENDIAN
 
 
 def main() -> NoReturn:
-    lib.main_loop(logging.DEBUG)
+    lib.main_loop(logging.INFO)
 
 
 if __name__ == "__main__":
