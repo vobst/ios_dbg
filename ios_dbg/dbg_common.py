@@ -77,7 +77,7 @@ You can also manually send any GDB RSP command.
 
 if len(sys.argv) < 2:
     print_help()
-    print("Specify serial device as a parameter")
+    print("\n\nSpecify serial device as a parameter.")
     sys.exit(1)
 
 ser: serial.Serial = serial.Serial(port=sys.argv[1], timeout=5)
