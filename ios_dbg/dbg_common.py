@@ -117,12 +117,15 @@ def getch_non_blocking() -> str | None:
 def OnInteractive() -> None:
     global ser
 
+    recoding: bool = False
+    rec_buf: bytearray = bytearray()
+
     saved_timeout: float | None = ser.timeout
     # make serial connection non-blocking
     ser.timeout = 0.0
 
     print(
-        "\nInteractive mode. Escape sequence is ']]': ']]B' for BREAK, ']]E' to exit."
+        "\nInteractive mode. Escape sequence is ']]': ']]R' to toggle recoding, ']]B' for BREAK, ']]E' to exit."
     )
 
     saw_one_esc: bool = False
@@ -131,6 +134,8 @@ def OnInteractive() -> None:
         # Check if there is input on the line.
         c: bytes = ser.read(1)
         if len(c) == 1:
+            if recoding:
+                rec_buf += c
             if c.isascii():
                 c_str: str = c.decode("ASCII")
             else:
@@ -163,6 +168,13 @@ def OnInteractive() -> None:
             match inp:
                 case "E":
                     break
+                case "R":
+                    if recoding:
+                        logger.info(f"[OnInteractive] Recoding stopped.")
+                        recoding = False
+                    else:
+                        logger.info(f"[OnInteractive] Recoding started.")
+                        recoding = True
                 case "B":
                     ser.send_break(duration=0.5)
                 case _:
@@ -174,6 +186,11 @@ def OnInteractive() -> None:
             ser.write(inp.encode("ASCII"))
         else:
             pass
+
+    if len(rec_buf) > 0:
+        with open("_rec.log", "wb") as f:
+            logger.info(f"[OnInteractive] Saving recoding to: _rec.log.")
+            f.write(rec_buf)
 
     ser.timeout = saved_timeout
 
