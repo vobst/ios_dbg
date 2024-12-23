@@ -559,19 +559,22 @@ def OnDumpMemory(start: str, stop: str) -> str | None:
     counter: int = 0
     last_time: float = time.time()
     progress_step = 10
-    while (
-        unpack(">I", bytes.fromhex(cur_addr))[0]
-        < unpack(">I", bytes.fromhex(stop))[0]
-    ):
-        res: str = GdbCommand("m{},00c7".format(cur_addr))
+
+    # The maximum number of bytes that can be read at once.
+    MAX_READ = 0xC7
+    while hex2int(cur_addr) < hex2int(stop):
+        bytes_left: int = hex2int(stop) - hex2int(cur_addr)
+        num_to_read = min(bytes_left, MAX_READ)
+
+        res: str = GdbCommand("m{},00{:x}".format(cur_addr, num_to_read))
 
         if counter % progress_step == 0:
             # every 1.94KiB
             cur_time: float = time.time()
             time_per_iter: float = (cur_time - last_time) / progress_step
             bytes_left: int = hex2int(stop) - hex2int(cur_addr)
-            bitrate: float = (0xC7 / time_per_iter) * 8
-            iter_left: float = bytes_left / 0xC7
+            bitrate: float = (MAX_READ / time_per_iter) * 8
+            iter_left: float = bytes_left / MAX_READ
             time_left: float = iter_left * time_per_iter
 
             logger.info(
@@ -585,9 +588,7 @@ def OnDumpMemory(start: str, stop: str) -> str | None:
             "[OnDumpMemory] Dumping at {} len {}".format(cur_addr, len(res))
         )
 
-        cur_addr: str = pack(
-            ">I", unpack(">I", bytes.fromhex(cur_addr))[0] + 0xC7
-        ).hex()
+        cur_addr: str = int2hex(hex2int(cur_addr) + num_to_read)
         buf += res
 
     return buf
